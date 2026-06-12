@@ -1,32 +1,4 @@
-import json
-import os
-import tempfile
 import pytest
-
-import database as db_module
-from app import create_app
-
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-    db_module.DATABASE_PATH = tmp.name
-    tmp.close()
-    db_module.init_db()
-    yield
-    os.unlink(tmp.name)
-
-
-@pytest.fixture
-def app():
-    app = create_app()
-    app.config["TESTING"] = True
-    return app
-
-
-@pytest.fixture
-def client(app):
-    return app.test_client()
 
 
 def test_register(client):

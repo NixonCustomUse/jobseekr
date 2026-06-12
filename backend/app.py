@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, send_from_directory
@@ -18,8 +17,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 _frontend_dir = os.path.join(os.path.dirname(BASE_DIR), "frontend")
-
-
 executor = ThreadPoolExecutor(max_workers=1)
 scheduler = BackgroundScheduler()
 
@@ -73,5 +70,7 @@ def create_app():
 
 
 if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 3000))
     app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)

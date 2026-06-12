@@ -1,7 +1,20 @@
 import json
+import os
+import tempfile
 import pytest
 
+import database as db_module
 from app import create_app
+
+
+@pytest.fixture(autouse=True)
+def setup_db():
+    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+    db_module.DATABASE_PATH = tmp.name
+    tmp.close()
+    db_module.init_db()
+    yield
+    os.unlink(tmp.name)
 
 
 @pytest.fixture
@@ -89,3 +102,29 @@ def test_list_jobs(client):
 def test_apply_requires_auth(client):
     resp = client.post("/api/applications", json={"job_id": 1})
     assert resp.status_code == 401
+
+
+def test_apply_full_flow(client):
+    client.post("/api/auth/register", json={
+        "email": "apply@test.com", "password": "pass", "name": "Apply",
+    })
+    client.put("/api/profile", json={
+        "resume_text": "3 years waitstaff experience",
+    })
+
+    import database as db
+    db.execute(
+        "INSERT INTO jobs (platform_id, title, company, location, category, description) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        ["js001", "Waiter", "Restoran ABC", "KL", "餐饮", "Looking for waiter"],
+    )
+
+    resp = client.post("/api/applications", json={"job_id": 1})
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data["status"] == "pending"
+
+    resp = client.get("/api/applications")
+    apps = resp.get_json()
+    assert len(apps) == 1
+    assert apps[0]["job_id"] == 1

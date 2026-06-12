@@ -1,6 +1,7 @@
 import sqlite3
-import json
-from config import DATABASE_PATH
+import os
+
+from config import DATABASE_PATH, BASE_DIR
 
 
 def get_db():
@@ -12,7 +13,8 @@ def get_db():
 
 
 def init_db():
-    with open("models/schema.sql") as f:
+    schema_path = os.path.join(BASE_DIR, "models", "schema.sql")
+    with open(schema_path) as f:
         schema = f.read()
     conn = get_db()
     conn.executescript(schema)
